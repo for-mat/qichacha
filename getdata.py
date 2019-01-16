@@ -11,6 +11,7 @@ import config
 import re
 import time
 import pymysql
+import random
 
 db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='spider_qichacha',charset='utf8')
 cursor = db.cursor()
@@ -18,7 +19,7 @@ cursor = db.cursor()
 
 # 获取所有unique
 def get_uniques():
-    cursor.execute('select key_no from source_company')
+    cursor.execute('select key_no from source_company where status =0')
     results = cursor.fetchall()
     uniques = []
     for i in results:
@@ -27,8 +28,9 @@ def get_uniques():
     return uniques
 
 headers = config.headers
-token = config.token
-uniques = get_uniques()
+#token = config.token
+token = '9c749a0100ea9bff4e24925346e7d08e'
+
 
 
 #first_keynos = get_keyno_unique.get_keyno()
@@ -188,14 +190,15 @@ class spider(object):
 
             '''将branch_no,company_id,vestin_company,name插入company_branch表中'''
             branches = self.result.get('Branches')
+            cursor.execute('select id from company where company_no=%s' % unique)
+            company_id = cursor.fetchone()[0]
             for i in branches:
                 keyno = i.get('KeyNo')
                 keyno = json.dumps(keyno, encoding="utf-8", ensure_ascii=False)
                 name = i.get('Name')
                 name = json.dumps(name, encoding="utf-8", ensure_ascii=False)
-                cursor.execute('select id from company where company_no=%s' % unique)
-                company_id = cursor.fetchone()[0]
-                self.company_id = company_id
+
+                #self.company_id = company_id
 
                 cursor.execute('insert into company_branch(branch_no,company_id,vestin_company,name) values(%s,%s,%s,%s)' % (keyno, company_id, 1, name))
 
@@ -218,18 +221,14 @@ class spider(object):
                 keyno = json.dumps(keyno, encoding="utf-8", ensure_ascii=False)
                 name = i.get('Name')
                 name = json.dumps(name, encoding="utf-8", ensure_ascii=False)
-                company_id = self.company_id
-
+                #company_id = self.company_id
 
                 cursor.execute('insert into company_investment(investment_no,company_id,name) values(%s,%s,%s)' % (keyno, company_id, name))
-
                 #time.sleep(2)
                 #db.commit()
 
-            #在三个表中都插入数据后，也就是一个商业公司插入完成后，提交事务
-            db.commit()
-            time.sleep(3)
 
+            #因为对外投资公司的网页有分页，20家为一页，因此判断公司数量（Total_investment）是否超过20，来翻页获取数据
             Total_investment = js.get('result').get('Paging').get('TotalRecords')
             index = 1
             num = (Total_investment-1)/20
@@ -247,14 +246,21 @@ class spider(object):
                     keyno = json.dumps(keyno, encoding="utf-8", ensure_ascii=False)
                     name = i.get('Name')
                     name = json.dumps(name, encoding="utf-8", ensure_ascii=False)
-                    company_id = self.company_id
+                    #company_id = self.company_id
 
                     cursor.execute('insert into company_investment(investment_no,company_id,name) values(%s,%s,%s)' % (keyno, company_id, name))
                     #db.commit()
                     #time.sleep(3)
                 time.sleep(2)
-                db.commit()
+                #db.commit()
 
+
+            #一个商业公司插入完成后，将source_company中的status更新为1，如果中间中断，直接从status=0的开始重新插入。到这里，一条商业公司的信息就插入完成了
+            unique = json.dumps(unique, encoding="utf-8", ensure_ascii=False)
+            cursor.execute('update source_company set status=1 where key_no=%s' %unique)
+            #在三个表中都插入数据后，也就是一个商业公司插入完成后，提交事务
+            db.commit()
+            time.sleep(3)
 
 
 
