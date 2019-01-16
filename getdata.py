@@ -82,7 +82,9 @@ class spider(object):
         self.type = result.get('EconKind')
         self.industry = result.get('Industry').get('Industry')
 
-        approval_date =  result.    get('CheckDate')
+        approval_date = result.get('CheckDate')
+        if approval_date < 0:
+            approval_date = 0
         approval_date = time.localtime(approval_date)
         self.approval_date = time.strftime("%Y-%m-%d",approval_date)
 
