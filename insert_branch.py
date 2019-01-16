@@ -11,11 +11,17 @@ db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='12312
 cursor = db.cursor()
 
 headers = config.headers
+#token = config.token
+
+tokens = config.tokens
+token_num = config.token_num
 token = config.token
 
 spider = spider()
 #unique = '287d9caa36e789820710a762fac79ad5'
 #print spider.get_fields(unique)
+
+
 
 
 def get_uniques():
@@ -29,13 +35,17 @@ def get_uniques():
 
 def insert_company():
     uniques = get_uniques()
+
     for unique in uniques:
         if unique == None:
             continue
 
+        #判断token使用次数，使用token超过1000次，就换一个token使用
+        config.change_token()
+
         create_time = time.time()
         # 获取包含所有字段的元组
-        (fields,result) = spider.get_fields(unique)
+        (fields,result) = spider.get_fields(unique,token)
         # 转为列表，并将unique,create_time,status加入列表
         company_fields = list(fields)
         unique = json.dumps(unique, encoding="utf-8", ensure_ascii=False)
@@ -50,9 +60,9 @@ def insert_company():
 
         time.sleep(2.5)
         db.commit()
-    db.commit()
+
+
+
+
 
 insert_company()
-
-
-
