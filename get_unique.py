@@ -49,7 +49,7 @@ def get_keyno():
         #update_time = time.strftime("%Y-%m-%d %H:%M:%S")
         update_time = time.time()
 
-        cursor.execute("update source_company set key_no='%s',update_time=%s,status=1 where id='%s'" %(keyno,update_time,id))
+        cursor.execute("update source_company set key_no='%s',update_time=%s where id='%s'" %(keyno,update_time,id))
         db.commit()
 
 
