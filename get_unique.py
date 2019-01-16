@@ -9,11 +9,14 @@ import json
 import time
 
 
-headers = config.headers
-token = config.token
-
 db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='spider_qichacha',charset='utf8')
 cursor = db.cursor()
+
+headers = config.headers
+tokens = config.tokens
+token_num = config.token_num
+token = config.token
+
 
 # 获取数据库中的id和name并加入字典
 def get_source_company():
@@ -30,6 +33,8 @@ def get_source_company():
 def get_keyno():
     company_dict = get_source_company()
     for com in company_dict.values():
+        # 判断token使用次数，使用token超过1000次，就换一个token使用
+        config.change_token()
         a = ','.join(com) #将set类型转为str
         js = requests.get('https://xcx.qichacha.com/wxa/v1/base/advancedSearchNew?searchKey=%s&token=%s' % (a, token), headers=headers)
         js = js.text
@@ -39,12 +44,12 @@ def get_keyno():
         keyno = Result.get('KeyNo')
 
         #print keyno
-        time.sleep(1)
+        time.sleep(2.5)
         id = list(company_dict.keys())[list(company_dict.values()).index(com)]  #根据values得到对应的key值
         #update_time = time.strftime("%Y-%m-%d %H:%M:%S")
         update_time = time.time()
 
-        cursor.execute("update source_company set key_no='%s',update_time=%s where id='%s'" %(keyno,update_time,id))
+        cursor.execute("update source_company set key_no='%s',update_time=%s,status=1 where id='%s'" %(keyno,update_time,id))
         db.commit()
 
 
