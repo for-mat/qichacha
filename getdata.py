@@ -29,7 +29,9 @@ def get_uniques():
 
 headers = config.headers
 #token = config.token
-token = '9c749a0100ea9bff4e24925346e7d08e'
+tokens = config.tokens
+token_num = config.token_num
+token = config.token
 
 
 
@@ -40,7 +42,7 @@ token = '9c749a0100ea9bff4e24925346e7d08e'
 class spider(object):
 
     #获取字段
-    def get_fields(self,unique):
+    def get_fields(self,unique,token):
         #获取网页，取出json中的公司信息
         js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getMoreEntInfo?unique=%s&token=%s' %(unique,token),headers = headers)
         js = js.text
@@ -167,9 +169,10 @@ class spider(object):
         for unique in uniques:
 
             create_time = time.time()
-
+            # 判断token使用次数，使用token超过1000次，就换一个token使用
+            config.change_token()
             # 获取包含所有字段的元组
-            (fields,result) = self.get_fields(unique)
+            (fields,result) = self.get_fields(unique,token)
             # 转为列表，并将unique,create_time,status加入列表
             company_fields = list(fields)
             unique = json.dumps(unique, encoding="utf-8", ensure_ascii=False)
@@ -210,6 +213,8 @@ class spider(object):
             '''将investment_no,company_id,name插入company_investment'''
             #unique = '287d9caa36e789820710a762fac79ad5'
             unique = json.loads(unique)
+            global token_num
+            token_num+=1
             js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getInvestments?unique=%s&token=%s' % (unique, token),headers=headers)
             js = js.text
             js = json.loads(js)
@@ -236,6 +241,7 @@ class spider(object):
             #while Total_investment>20:
             for i in range(num):
                 index+=1
+                token_num += 1
                 js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getInvestments?unique=%s&token=%s&pageIndex=%s' % (unique, token,index),headers=headers)
                 js = js.text
                 js = json.loads(js)
