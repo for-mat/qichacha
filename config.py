@@ -41,13 +41,13 @@ def change_token():
     global tokens
     global token
     token_num += 1
-    if token_num > 3:
+    if token_num > 800:
         token = json.dumps(token, encoding="utf-8", ensure_ascii=False)
         cursor.execute('update token_list set token_status=0 where wx_token=%s' % token)
         db.commit()
         while len(tokens) == 0:
             print 'need to add token~'
-            time.sleep(5)
+            time.sleep(60)
             tokens = get_tokens()
         else:
                 print 'ok'
