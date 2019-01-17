@@ -22,7 +22,8 @@ headers = {
 }
 def get_tokens():
 
-    cursor.execute('select wx_token from token_list where token_status=0')
+    cursor.execute('select wx_token from token_list where token_status=1')
+    db.commit()
     results = cursor.fetchall()
     tokens = []
     for i in results:
@@ -40,22 +41,22 @@ def change_token():
     global tokens
     global token
     token_num += 1
-    if token_num > 800:
+    if token_num > 3:
         token = json.dumps(token, encoding="utf-8", ensure_ascii=False)
-        cursor.execute('update token_list set token_status=1 where wx_token=%s' % token)
+        cursor.execute('update token_list set token_status=0 where wx_token=%s' % token)
         db.commit()
+        while len(tokens) == 0:
+            print 'need to add token~'
+            time.sleep(5)
+            tokens = get_tokens()
+        else:
+                print 'ok'
         token = tokens.pop()
         token_num = 0
-        if len(tokens) == 0:
-            print 'need to add token~'
-            time.sleep(60)
-            tokens = get_tokens()
-            while len(tokens) ==0:
-                time.sleep(60)
-                tokens = get_tokens()
-                print 'Please add token~~'
-            else:
-                print 'OK'
+
+
+
+
 
 
 
