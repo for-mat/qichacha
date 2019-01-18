@@ -5,6 +5,7 @@
 import pymysql
 import json
 import time
+from dingtalkchatbot.chatbot import DingtalkChatbot
 
 db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='spider_qichacha',charset='utf8')
 cursor = db.cursor()
@@ -47,6 +48,7 @@ def change_token():
         db.commit()
         while len(tokens) == 0:
             print 'need to add token~'
+            send_msg()
             time.sleep(60)
             tokens = get_tokens()
         else:
@@ -54,16 +56,20 @@ def change_token():
         token = tokens.pop()
         token_num = 0
 
+now_time=time.strftime("%H:%M",time.localtime(time.time()))
+
+#发消息
+def send_msg():
+    webhook = 'https://oapi.dingtalk.com/robot/send?access_token=%s' %dingtoken
+    xiaoding = DingtalkChatbot(webhook)
+    xiaoding.send_text(msg='QCC-token失效'+now_time, is_at_all=True)
 
 
 
 
+#ding talk token
+dingtoken="f3d898ede5e9f8482fe4919e05aabfa173c7bec6ca9ff0e2b1d392d989d90710"
 
-
-
-
-
-#tokens = ['9c749a0100ea9bff4e24925346e7d08e']
 
 
 
