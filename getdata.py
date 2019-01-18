@@ -277,7 +277,21 @@ class spider(object):
 
 
     def main(self):
-        self.insert_company()
+        #self.insert_company()
+        #token失效判断，避免程序中断
+        while True:
+            try:
+                self.insert_company()
+            except AttributeError:
+                print 'token faild or user forbidden'
+                while len(tokens) == 0:
+                    print 'need to add token~'
+                    time.sleep(60)
+                    tokens = config.get_tokens()
+                if len(tokens) > 0:
+                    print 'ok'
+                token = tokens.pop()
+                token_num = 0
 
 
 
