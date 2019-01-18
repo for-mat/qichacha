@@ -53,10 +53,16 @@ def get_keyno():
         db.commit()
 
 
-try:
-    get_keyno()
-except:
-    print 'False'
-    exit()
+while True:
+    try:
+        get_keyno()
+    except AttributeError:
+        print 'token faild or user forbidden'
+        token = json.dumps(token, encoding="utf-8", ensure_ascii=False)
+        cursor.execute('update token_list set token_status=0 where wx_token=%s' % token)
+        db.commit()
+        print "please add token"
+        config.send_msg()
+        time.sleep(60)
 
 

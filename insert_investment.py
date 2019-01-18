@@ -83,6 +83,7 @@ while True:
         cursor.execute('update token_list set token_status=0 where wx_token=%s' % token)
         db.commit()
         print "please add token"
+        config.send_msg()
         time.sleep(60)
 
 

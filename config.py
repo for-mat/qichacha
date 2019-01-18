@@ -56,7 +56,7 @@ def change_token():
         token = tokens.pop()
         token_num = 0
 
-now_time=time.strftime("%H:%M",time.localtime(time.time()))
+now_time=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
 
 #发消息
 def send_msg():
