@@ -35,7 +35,13 @@ def get_tokens():
 tokens = get_tokens()
 token_num = 0
 tokens.reverse()
-token = tokens.pop()
+try:
+    token = tokens.pop()
+except IndexError:
+    #print 'Please provide a available token'
+    #exit()
+    token = 'asdgasdg'
+
 
 def change_token():
     global token_num
