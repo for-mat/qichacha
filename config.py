@@ -56,10 +56,11 @@ def change_token():
         token = tokens.pop()
         token_num = 0
 
-now_time=time.strftime("%H:%M",time.localtime(time.time()))
+
 
 #发消息
 def send_msg():
+    now_time=time.strftime("%H:%M",time.localtime(time.time()))
     webhook = 'https://oapi.dingtalk.com/robot/send?access_token=%s' %dingtoken
     xiaoding = DingtalkChatbot(webhook)
     xiaoding.send_text(msg='QCC-token失效'+now_time, is_at_all=True)
