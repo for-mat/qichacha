@@ -11,15 +11,13 @@ db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='12312
 cursor = db.cursor()
 
 headers = {
-    'User-Agent':'Mozilla/5.0 (Linux; Android 8.0.0; MHA-AL00 Build/HUAWEIMHA-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/68.0.3440.91 Mobile Safari/537.36 MicroMessenger/6.7.3.1360(0x260703FA) NetType/4G Language/zh_CN Process/appbrand2'
+    'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'
     ,'content-type':'application/json'
     ,'charset':'utf-8'
     ,'Accept-Encoding':'gzip'
-    ,'referer':'https://servicewechat.com/wx395200814fcd7599/25/page-frame.html'
     ,'Host':'xcx.qichacha.com'
-    ,'Connection':'Keep-Alive'
+    ,'Connection':'closed'
     ,'Server': 'Tengine'
-    ,'Set-Cookie': 'acw_tc=7ae1439b15460757517813698e31f0ddcc8ef1c06b5d1b4961e6890acf;path=/;HttpOnly;Max-Age=2678401'
 }
 def get_tokens():
 
@@ -35,12 +33,12 @@ def get_tokens():
 tokens = get_tokens()
 token_num = 0
 tokens.reverse()
-try:
+try:         #如果一开始就没有token，自定义一个token=123
     token = tokens.pop()
 except IndexError:
     #print 'Please provide a available token'
     #exit()
-    token = 'asdgasdg'
+    token = '123'
 
 
 def change_token():
@@ -62,10 +60,11 @@ def change_token():
         token = tokens.pop()
         token_num = 0
 
-now_time=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
+
 
 #发消息
 def send_msg():
+    now_time=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
     webhook = 'https://oapi.dingtalk.com/robot/send?access_token=%s' %dingtoken
     xiaoding = DingtalkChatbot(webhook)
     xiaoding.send_text(msg='QCC-token失效'+now_time, is_at_all=True)
@@ -74,7 +73,7 @@ def send_msg():
 
 
 #ding talk token
-dingtoken="f3d898ede5e9f8482fe4919e05aabfa173c7bec6ca9ff0e2b1d392d989d90710"
+dingtoken="8bbe93c55b7aaff815f620f7331a1cfe06f46163a132b4c30877b47b9d28c109"
 
 
 

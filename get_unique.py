@@ -7,6 +7,7 @@ import config
 import requests
 import json
 import time
+import proxy_pool
 
 
 db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='spider_qichacha',charset='utf8')
@@ -16,6 +17,7 @@ headers = config.headers
 tokens = config.tokens
 token_num = config.token_num
 token = config.token
+proxy = proxy_pool.proxy
 
 
 # 获取数据库中的id和name并加入字典
@@ -36,7 +38,7 @@ def get_keyno():
         # 判断token使用次数，使用token超过1000次，就换一个token使用
         config.change_token()
         a = ','.join(com) #将set类型转为str
-        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/advancedSearchNew?searchKey=%s&token=%s' % (a, token), headers=headers)
+        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/advancedSearchNew?searchKey=%s&token=%s' % (a, token), headers=headers, proxies=proxy)
         js = js.text
         js = json.loads(js)
         result = js.get('result')
@@ -56,13 +58,14 @@ def get_keyno():
 while True:
     try:
         get_keyno()
-    except AttributeError:
+    except:
         print 'token faild or user forbidden'
         token = json.dumps(token, encoding="utf-8", ensure_ascii=False)
         cursor.execute('update token_list set token_status=0 where wx_token=%s' % token)
+        token = config.token
         db.commit()
         print "please add token"
         config.send_msg()
-        time.sleep(60)
+        time.sleep(120)
 
 

@@ -6,6 +6,7 @@ import config
 from getdata import spider
 import time
 import json
+import proxy_pool
 
 db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='spider_qichacha',
                      charset='utf8')
@@ -15,6 +16,7 @@ headers = config.headers
 tokens = config.tokens
 token_num = config.token_num
 token = config.token
+proxy = proxy_pool.proxy
 
 spider = spider()
 
@@ -41,7 +43,15 @@ def insert_company():
         # 判断token使用次数，使用token超过1000次，就换一个token使用
         config.change_token()
         # 获取包含所有字段的元组
-        (fields,result) = spider.get_fields(unique, token)
+        while True:
+            try:
+                (fields, result) = spider.get_fields(unique, token,proxy)
+            except:
+                global proxy
+                proxy = proxy_pool.change_proxy()
+                continue
+            break
+        #(fields,result) = spider.get_fields(unique, token)
         # 转为列表，并将unique,create_time,status加入列表
         company_fields = list(fields)
         unique = json.dumps(unique, encoding="utf-8", ensure_ascii=False)
@@ -72,18 +82,21 @@ def insert_company():
         db.commit()
         time.sleep(2)
     #db.commit()
-
+insert_company()
+exit()
 #token失效判断，避免程序中断
 while True:
     try:
         insert_company()
-    except AttributeError:
+    except:
+    #except AttributeError:
         print 'token faild or user forbidden'
         token = json.dumps(token, encoding="utf-8", ensure_ascii=False)
         cursor.execute('update token_list set token_status=0 where wx_token=%s' % token)
+        token = config.token
         db.commit()
         print "please add token"
         config.send_msg()
-        time.sleep(60)
+        time.sleep(120)
 
 
