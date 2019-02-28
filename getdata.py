@@ -13,6 +13,7 @@ import time
 import pymysql
 import random
 import proxy_pool
+import headers_pool
 
 db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='spider_qichacha',charset='utf8')
 cursor = db.cursor()
@@ -28,7 +29,7 @@ def get_uniques():
         uniques.append(keyno)
     return uniques
 
-headers = config.headers
+#headers = config.headers
 #token = config.token
 tokens = config.tokens
 token_num = config.token_num
@@ -42,12 +43,16 @@ proxy = proxy_pool.proxy
 class spider(object):
 
     #获取字段
-    def get_fields(self,unique,token,proxy):
+    def get_fields(self,unique,token,proxy,headers):
         #获取网页，取出json中的公司信息
         #设置代理ip
         self.proxy = proxy
+        self.headers = headers_pool.requests_headers()
+        #print headers
         js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getMoreEntInfo?unique=%s&token=%s' % (unique,token), headers = headers, proxies=self.proxy,timeout=2)
+        #print js.cookies
         js = js.text
+        #print js
         js = json.loads(js)
         result = js.get('result')
         self.result = result
@@ -178,8 +183,8 @@ class spider(object):
             # 获取包含所有字段的元组
             while True:
                 try:
-                    (fields,result) = self.get_fields(unique,token,self.proxy)
-                except:
+                    (fields,result) = self.get_fields(unique,token,self.proxy,self.headers)
+                except (requests.exceptions.ProxyError,requests.exceptions.ConnectTimeout):
                     self.proxy = proxy_pool.change_proxy()
                     continue
                 break
@@ -227,7 +232,7 @@ class spider(object):
             token_num+=1
             while True:
                 try:
-                    js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getInvestments?unique=%s&token=%s' % (unique, token), headers=headers, proxies=self.proxy,timeout=2)
+                    js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getInvestments?unique=%s&token=%s' % (unique, token), headers=self.headers, proxies=self.proxy,timeout=2)
                 except:
                     self.proxy = proxy_pool.change_proxy()
                     continue
@@ -260,7 +265,7 @@ class spider(object):
                 token_num += 1
                 while True:
                     try:
-                        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getInvestments?unique=%s&token=%s&pageIndex=%s' % (unique, token,index), headers=headers, proxies=self.proxy,timeout=2)
+                        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getInvestments?unique=%s&token=%s&pageIndex=%s' % (unique, token,index), headers=self.headers, proxies=self.proxy,timeout=2)
                     except:
                         self.proxy = proxy_pool.change_proxy()
                         continue

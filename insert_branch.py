@@ -7,6 +7,8 @@ from getdata import spider
 import time
 import json
 import proxy_pool
+import headers_pool
+import requests
 
 db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='spider_qichacha',charset='utf8')
 cursor = db.cursor()
@@ -48,8 +50,9 @@ def insert_company():
         # 获取包含所有字段的元组
         while True:
             try:
-                (fields, result) = spider.get_fields(unique, token,proxy)
-            except:
+                headers = headers_pool.requests_headers()
+                (fields, result) = spider.get_fields(unique, token,proxy,headers)
+            except (requests.exceptions.ProxyError,requests.exceptions.ConnectTimeout):
                 global proxy
                 proxy = proxy_pool.change_proxy()
                 continue

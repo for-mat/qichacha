@@ -7,12 +7,14 @@ from getdata import spider
 import time
 import json
 import proxy_pool
+import headers_pool
+import requests
 
 db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='spider_qichacha',
                      charset='utf8')
 cursor = db.cursor()
 
-headers = config.headers
+#headers = config.headers
 tokens = config.tokens
 token_num = config.token_num
 token = config.token
@@ -45,12 +47,16 @@ def insert_company():
         # 获取包含所有字段的元组
         while True:
             try:
-                (fields, result) = spider.get_fields(unique, token,proxy)
-            except:
+                headers = headers_pool.requests_headers()
+                (fields, result) = spider.get_fields(unique, token,proxy,headers)
+            except (requests.exceptions.ProxyError,requests.exceptions.ConnectTimeout):
                 global proxy
                 proxy = proxy_pool.change_proxy()
                 continue
             break
+
+        #headers = requests_headers.requests_headers()
+        #(fields, result) = spider.get_fields(unique, token, proxy ,headers)
         #(fields,result) = spider.get_fields(unique, token)
         # 转为列表，并将unique,create_time,status加入列表
         company_fields = list(fields)
@@ -82,8 +88,8 @@ def insert_company():
         db.commit()
         time.sleep(2)
     #db.commit()
-insert_company()
-exit()
+#insert_company()
+#exit()
 #token失效判断，避免程序中断
 while True:
     try:

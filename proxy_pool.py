@@ -8,6 +8,7 @@ import pymysql
 import json
 import random
 import time
+import headers_pool
 
 db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='proxies',
                      charset='utf8')
@@ -50,18 +51,23 @@ def change_proxy():
 while True:
     proxy = {'https': proxyList[proxy_random]}
     print proxy
-    headers = config.headers
-    token = '0a4d4efa568303b11774a8b8df601921'
+    header = requests_headers.requests_headers()
+    print header
+    unique = '7f3e39410189a22878048e9d09b6570d'
+    token = '33214b097edd177ee617b0dcf6faf754'
     try:
-        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getMoreEntInfo?unique=7f3e39410189a22878048e9d09b6570d&token=%s' %(token),headers = headers,proxies=proxy,timeout=2)
+        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getMoreEntInfo?unique=%s&token=%s' %(unique,token),headers = header,proxies=proxy,timeout=2)
     except:
         proxy_random = random.randint(0, proxy_len - 1)
         proxy = {'https': proxyList[proxy_random]}
         continue
+    print js.cookies
     js = js.text
     print js
     time.sleep(2)
+    unique = '0502d4de31c712ee7c31b7d4e9d9dbc2'
 '''
+
 
 
 
