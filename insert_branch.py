@@ -52,7 +52,7 @@ def insert_company():
             try:
                 headers = headers_pool.requests_headers()
                 (fields, result) = spider.get_fields(unique, token,proxy,headers)
-            except (requests.exceptions.ProxyError,requests.exceptions.ConnectTimeout):
+            except (requests.exceptions.ProxyError,requests.exceptions.ConnectTimeout,requests.exceptions.ReadTimeout,requests.exceptions.SSLError):
                 global proxy
                 proxy = proxy_pool.change_proxy()
                 continue
@@ -81,7 +81,7 @@ while True:
         print 'token faild or user forbidden'
         token = json.dumps(token, encoding="utf-8", ensure_ascii=False)
         cursor.execute('update token_list set token_status=0 where wx_token=%s' % token)
-        token = config.token
+        token = config.check_token()
         db.commit()
         print "please add token"
         config.send_msg()

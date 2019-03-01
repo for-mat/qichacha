@@ -33,12 +33,16 @@ def get_tokens():
 tokens = get_tokens()
 token_num = 0
 tokens.reverse()
-try:         #如果一开始就没有token，自定义一个token=123
-    token = tokens.pop()
-except IndexError:
-    #print 'Please provide a available token'
-    #exit()
-    token = '123'
+def check_token():
+    try:         #如果一开始就没有token，自定义一个token=123
+        token = tokens.pop()
+    except IndexError:
+        #print 'Please provide a available token'
+        #exit()
+        token = '123'
+    return token
+
+token = check_token()
 
 
 def change_token():
@@ -64,11 +68,7 @@ def change_token():
 
 #发消息
 def send_msg():
-<<<<<<< HEAD
     now_time=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
-=======
-    now_time=time.strftime("%H:%M",time.localtime(time.time()))
->>>>>>> 8e144ba2aeb5567aae474b21cf8cc108db14d1f7
     webhook = 'https://oapi.dingtalk.com/robot/send?access_token=%s' %dingtoken
     xiaoding = DingtalkChatbot(webhook)
     xiaoding.send_text(msg='QCC-token失效'+now_time, is_at_all=True)
@@ -81,4 +81,4 @@ dingtoken="8bbe93c55b7aaff815f620f7331a1cfe06f46163a132b4c30877b47b9d28c109"
 
 
 
-
+print token

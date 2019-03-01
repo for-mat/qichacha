@@ -49,10 +49,10 @@ class spider(object):
         self.proxy = proxy
         self.headers = headers_pool.requests_headers()
         #print headers
-        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getMoreEntInfo?unique=%s&token=%s' % (unique,token), headers = headers, proxies=self.proxy,timeout=2)
+        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getMoreEntInfo?unique=%s&token=%s' % (unique,token), headers = headers, proxies=self.proxy,verify=False, timeout=1)
         #print js.cookies
         js = js.text
-        #print js
+        print js
         js = json.loads(js)
         result = js.get('result')
         self.result = result
@@ -184,7 +184,7 @@ class spider(object):
             while True:
                 try:
                     (fields,result) = self.get_fields(unique,token,self.proxy,self.headers)
-                except (requests.exceptions.ProxyError,requests.exceptions.ConnectTimeout):
+                except (requests.exceptions.ProxyError,requests.exceptions.ConnectTimeout,requests.exceptions.ReadTimeout,requests.exceptions.SSLError):
                     self.proxy = proxy_pool.change_proxy()
                     continue
                 break
@@ -232,7 +232,7 @@ class spider(object):
             token_num+=1
             while True:
                 try:
-                    js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getInvestments?unique=%s&token=%s' % (unique, token), headers=self.headers, proxies=self.proxy,timeout=2)
+                    js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getInvestments?unique=%s&token=%s' % (unique, token), headers=self.headers, proxies=self.proxy,verify=False,timeout=2)
                 except:
                     self.proxy = proxy_pool.change_proxy()
                     continue
@@ -265,7 +265,7 @@ class spider(object):
                 token_num += 1
                 while True:
                     try:
-                        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getInvestments?unique=%s&token=%s&pageIndex=%s' % (unique, token,index), headers=self.headers, proxies=self.proxy,timeout=2)
+                        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getInvestments?unique=%s&token=%s&pageIndex=%s' % (unique, token,index), headers=self.headers, proxies=self.proxy,verify=False,timeout=2)
                     except:
                         self.proxy = proxy_pool.change_proxy()
                         continue
@@ -311,7 +311,7 @@ class spider(object):
                 print 'token faild or user forbidden'
                 token = json.dumps(token, encoding="utf-8", ensure_ascii=False)
                 cursor.execute('update token_list set token_status=0 where wx_token=%s' % token)
-                token = config.token
+                token = config.check_token()
                 db.commit()
                 print "please add token"
                 config.send_msg()

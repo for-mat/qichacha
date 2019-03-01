@@ -22,7 +22,7 @@ def fetch():
     if count > 5000:
         print('代理IP超出5000 暂时不需要再抓取')
     else:
-        req = requests.get('https://raw.githubusercontent.com/fate0/proxylist/master/proxy.list')
+        req = requests.get('https://raw.githubusercontent.com/fate0/proxylist/master/proxy.list',verify=False)
         response = req.text
         #js = json.loads(response)
         responseJsonList = response.splitlines()
