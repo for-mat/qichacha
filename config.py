@@ -81,4 +81,4 @@ dingtoken="8bbe93c55b7aaff815f620f7331a1cfe06f46163a132b4c30877b47b9d28c109"
 
 
 
-print token
+print 'token = ' + token

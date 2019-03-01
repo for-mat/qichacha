@@ -17,23 +17,18 @@ cursor = db.cursor()
 #proxy = {'https':'https://172.106.164.151:8082'}
 # 抓取免费代理
 def fetch():
-    cursor.execute('SELECT COUNT(*) AS count FROM `proxy` WHERE `is_valid` = 1')
-    count=cursor.fetchone()[0]  #可用的代理ip数量
-    if count > 5000:
-        print('代理IP超出5000 暂时不需要再抓取')
-    else:
-        req = requests.get('https://raw.githubusercontent.com/fate0/proxylist/master/proxy.list',verify=False)
-        response = req.text
-        #js = json.loads(response)
-        responseJsonList = response.splitlines()
-        proxyList = []
-        for val in responseJsonList:
-            array = json.loads(val)
-            if array['type'] == 'https':
-                proxy_ip = 'https://' + str(array['host']) + ':' + str(array['port'])
-                proxyList.append(proxy_ip)
-        #返回所有的代理ip
-        return proxyList[:]
+    req = requests.get('https://raw.githubusercontent.com/fate0/proxylist/master/proxy.list')
+    response = req.text
+    #js = json.loads(response)
+    responseJsonList = response.splitlines()
+    proxyList = []
+    for val in responseJsonList:
+        array = json.loads(val)
+        if array['type'] == 'https':
+            proxy_ip = 'https://' + str(array['host']) + ':' + str(array['port'])
+            proxyList.append(proxy_ip)
+    #返回所有的代理ip
+    return proxyList[:]
 
 proxyList = fetch()
 proxy_len = len(proxyList)
@@ -43,8 +38,9 @@ proxy = {'https': proxyList[proxy_random]}
 #print proxy
 
 def change_proxy():
-    proxy_random = random.randint(0, proxy_len - 1)
-    proxy = {'https': proxyList[proxy_random]}
+    #proxy_random = random.randint(0, proxy_len - 1)
+    #proxy = {'https': proxyList[proxy_random]}
+    proxy = {'https': proxyList.pop()}
     return proxy
 
 '''
