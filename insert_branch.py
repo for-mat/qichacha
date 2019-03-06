@@ -6,7 +6,7 @@ import config
 from getdata import spider
 import time
 import json
-import proxy_pool
+import proxy_pool1
 import headers_pool
 import requests
 
@@ -54,7 +54,7 @@ def insert_company():
                 (fields, result) = spider.get_fields(unique, token,proxy,headers)
             except (requests.exceptions.ProxyError,requests.exceptions.ConnectTimeout,requests.exceptions.ReadTimeout,requests.exceptions.SSLError):
                 global proxy
-                proxy = proxy_pool.change_proxy()
+                proxy = proxy_pool1.change_proxy()
                 continue
             break
         #(fields,result) = spider.get_fields(unique,token)

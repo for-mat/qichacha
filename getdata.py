@@ -12,7 +12,7 @@ import re
 import time
 import pymysql
 import random
-import proxy_pool
+import proxy_pool1
 import headers_pool
 
 db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='spider_qichacha',charset='utf8')
@@ -34,7 +34,7 @@ def get_uniques():
 tokens = config.tokens
 token_num = config.token_num
 token = config.token
-proxy = proxy_pool.proxy
+proxy = proxy_pool1.proxy
 
 #first_keynos = get_keyno_unique.get_keyno()
 
@@ -185,7 +185,7 @@ class spider(object):
                 try:
                     (fields,result) = self.get_fields(unique,token,self.proxy,self.headers)
                 except (requests.exceptions.ProxyError,requests.exceptions.ConnectTimeout,requests.exceptions.ReadTimeout,requests.exceptions.SSLError):
-                    self.proxy = proxy_pool.change_proxy()
+                    self.proxy = proxy_pool1.change_proxy()
                     continue
                 break
             # 转为列表，并将unique,create_time,status加入列表
@@ -234,7 +234,7 @@ class spider(object):
                 try:
                     js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getInvestments?unique=%s&token=%s' % (unique, token), headers=self.headers, proxies=self.proxy,verify=False,timeout=2)
                 except:
-                    self.proxy = proxy_pool.change_proxy()
+                    self.proxy = proxy_pool1.change_proxy()
                     continue
                 break
             js = js.text
@@ -267,7 +267,7 @@ class spider(object):
                     try:
                         js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getInvestments?unique=%s&token=%s&pageIndex=%s' % (unique, token,index), headers=self.headers, proxies=self.proxy,verify=False,timeout=2)
                     except:
-                        self.proxy = proxy_pool.change_proxy()
+                        self.proxy = proxy_pool1.change_proxy()
                         continue
                     break
                 js = js.text

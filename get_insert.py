@@ -2,14 +2,16 @@
 """
 获取获取(商业公司)第一级的keyno并存到数据库中,keyno就是url中的unique
 """
-import pymysql
+
+import proxy_pool
+import headers_pool
 import config
+import pymysql
 import requests
 import json
 import time
-import proxy_pool
-import headers_pool
 import re
+import random
 
 
 db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='spider_qichacha',charset='utf8')
@@ -18,7 +20,7 @@ cursor = db.cursor()
 tokens = config.tokens
 token_num = config.token_num
 token = config.token
-proxy = proxy_pool.proxy
+#proxy = proxy_pool.proxy
 
 
 class insert_source_company(object):
@@ -67,6 +69,7 @@ class get_all_fields(object):
     #获取网页中的字段，返回字段列表和result(用于获取分支机构名称和unique)
     def get_fields(unique ,token ,proxy):
         proxy = proxy
+        print proxy
         headers = headers_pool.requests_headers()
         # print headers
         # 获取网页，取出json中的公司信息
@@ -208,13 +211,16 @@ class insert_company(object):
             config.change_token()
             # 获取包含所有字段的元组
             p_num = 1
+            self.proxy = proxy_pool.proxy
             while True:
                 try:
-                    (fields, result) = get_all_fields.get_fields(unique, token, proxy)
-                except (requests.exceptions.ProxyError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,requests.exceptions.SSLError):
+                    (fields, result) = get_all_fields.get_fields(unique, token, self.proxy)
+                except (
+                requests.exceptions.ProxyError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,
+                requests.exceptions.SSLError, requests.exceptions.ConnectionError):
                     self.proxy = proxy_pool.change_proxy()
-                    print 'changing proxy...%s'%p_num
-                    p_num+=1
+                    print 'changing proxy...%s...%s' % (p_num, self.proxy)
+                    p_num += 1
                     continue
                 break
             # 转为列表，并将unique,create_time,status加入列表
@@ -344,8 +350,8 @@ class insert_company_investment(object):
             print 'table company_investment is ok'
         else:
             print '正在向company_investment插入数据...'
+        n=1
         for unique in uniques:
-            n=1
             create_time = time.time()
             # 判断token使用次数，使用token超过1000次，就换一个token使用
             config.change_token()
@@ -353,8 +359,9 @@ class insert_company_investment(object):
             p_num = 1
             while True:
                 try:
-                    (fields, result) = get_all_fields.get_fields(unique, token, proxy)
-                except (requests.exceptions.ProxyError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,requests.exceptions.SSLError):
+                    self.proxy = proxy_pool.proxy
+                    (fields, result) = get_all_fields.get_fields(unique, token, self.proxy)
+                except (requests.exceptions.ProxyError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,requests.exceptions.SSLError,requests.exceptions.ConnectionError):
                     self.proxy = proxy_pool.change_proxy()
                     print 'changing proxy...%s...%s'%(p_num,self.proxy)
                     p_num+=1
@@ -393,11 +400,69 @@ class insert_company_investment(object):
                     keyno, company_id, investment_id, 0, name))
 
             db.commit()
-            time.sleep(2)
-            print '第%s条插入成功,已插入%s条,剩余%s条'%(company_id,n,len(uniques)-n)
+            print '第%s条插入成功,已插入%s条,剩余%s条'%(investment_id,n,len(uniques)-n)
             n+=1
+            time.sleep(2)
         # db.commit()
 
+
+class insert_company_branch(object):
+    #获取company_branch中的unique
+    def get_uniques(self):
+        cursor.execute('select branch_no from company_branch where status=0')
+        results = cursor.fetchall()
+        uniques = []
+        for i in results:
+            keyno = i[0]
+            uniques.append(keyno)
+        return uniques
+
+    #向company_branch中插入数据
+    def insert_data(self):
+        uniques = self.get_uniques()
+        if len(uniques) == 0:
+            print 'table company_branch is ok'
+        else:
+            print '正在向company_branch插入数据...'
+        n=1
+        for unique in uniques:
+            if unique == None:
+                continue
+
+            # 判断token使用次数，使用token超过1000次，就换一个token使用
+            config.change_token()
+
+            create_time = time.time()
+            # 获取包含所有字段的元组
+            p_num = 1
+            self.proxy = proxy_pool.proxy
+            while True:
+                try:
+                    (fields, result) = get_all_fields.get_fields(unique, token, self.proxy)
+                except (requests.exceptions.ProxyError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,requests.exceptions.SSLError,requests.exceptions.ConnectionError):
+                    self.proxy = proxy_pool.change_proxy()
+                    print 'changing proxy...%s...%s'%(p_num,self.proxy)
+                    p_num+=1
+                    continue
+                break
+            # (fields,result) = spider.get_fields(unique,token)
+            # 转为列表，并将unique,create_time,status加入列表
+            company_fields = list(fields)
+            unique = json.dumps(unique, encoding="utf-8", ensure_ascii=False)
+            company_fields.append(create_time)
+            company_fields.append(1)
+            company_fields.append(unique)
+            # 转为元组，插入数据
+            company_fields = tuple(company_fields)
+
+            # tuple = (unique,name, phone, website, email, province, city, county, address, intro, registered_capital, actual_capital,operating_state, establishment_date, uscc, taxpayer_number, registration_number, organization_code, type,industry, approval_date, registration_authority, area, english_name, used_name, insurancer_count,staff_count, operation_period, operation_scope,create_time,1)
+            cursor.execute('update company_branch set name=%s, phone=%s, website=%s, email=%s, province=%s, city=%s, county=%s, address=%s, intro=%s, registered_capital=%s, actual_capital=%s, operating_state=%s, establishment_date=%s, uscc=%s, taxpayer_number=%s, registration_number=%s, organization_code=%s, type=%s, industry=%s, approval_date=%s, registration_authority=%s, area=%s, english_name=%s, used_name=%s, insurancer_count=%s, staff_count=%s, operation_period=%s, operation_scope=%s, create_time=%s, status=%s where branch_no=%s' % company_fields)
+            db.commit()
+            cursor.execute('select id from company_branch where branch_no=%s' % unique)
+            branch_id = cursor.fetchone()[0]
+            print '第%s条插入成功,已插入%s条,剩余%s条'%(branch_id,n,len(uniques)-n)
+            n+=1
+            time.sleep(2)
 
 
 def main():
@@ -407,6 +472,7 @@ def main():
             insert_source_company().insert_keyno()
             insert_company().insert_data()
             insert_company_investment().insert_data()
+            insert_company_branch().insert_data()
         except AttributeError:
             print 'token faild or user forbidden'
             disabled_token = json.dumps(token, encoding="utf-8", ensure_ascii=False)

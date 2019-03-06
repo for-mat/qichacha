@@ -3,66 +3,53 @@
 "配置代理"
 
 import requests
-import config
-import pymysql
 import json
 import random
-import time
-import headers_pool
 
-db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='proxies',
-                     charset='utf8')
-cursor = db.cursor()
+
+
 
 #proxy = {'https':'https://172.106.164.151:8082'}
 # 抓取免费代理
 def fetch():
-    req = requests.get('https://raw.githubusercontent.com/fate0/proxylist/master/proxy.list')
+    req = requests.get('https://www.proxy-list.download/api/v0/get?l=en&t=socks5')
     response = req.text
-    #js = json.loads(response)
-    responseJsonList = response.splitlines()
-    proxyList = []
-    for val in responseJsonList:
-        array = json.loads(val)
-        if array['type'] == 'https':
-            proxy_ip = 'https://' + str(array['host']) + ':' + str(array['port'])
-            proxyList.append(proxy_ip)
-    #返回所有的代理ip
-    return proxyList[:]
+    js = json.loads(response)
+    socks_dicts = js[0].get('LISTA')
+    num = len(socks_dicts)
+    socks = []
+    for i in range(200):
+        if 'CN' or 'HK' in socks_dicts[i].values():
+            ip = socks_dicts[i].get('IP')
+            port = socks_dicts[i].get('PORT')
+            sock = 'socks5://' + ip + ':' + port
+            proxy1 = {'https':sock}
+            #检查sock可用性，将可用sock
+            try:
+                requests.get('https://icanhazip.com/', proxies=proxy1, timeout=1)
+                socks.append(sock)
+            except:
+                print 'no'
+                continue
+    return socks
 
-proxyList = fetch()
-proxy_len = len(proxyList)
-proxy_random = random.randint(0,proxy_len-1)
-proxy = {'https': proxyList[proxy_random]}
-#proxy = {}
-#print proxy
+proxy_list = fetch()
+print proxy_list
+proxy = {'https': str(random.choice(proxy_list))}
 
 def change_proxy():
-    #proxy_random = random.randint(0, proxy_len - 1)
-    #proxy = {'https': proxyList[proxy_random]}
-    proxy = {'https': proxyList.pop()}
+    proxy = {'https': str(random.choice(proxy_list))}
     return proxy
 
-'''
-while True:
-    proxy = {'https': proxyList[proxy_random]}
-    print proxy
-    header = requests_headers.requests_headers()
-    print header
-    unique = '7f3e39410189a22878048e9d09b6570d'
-    token = '33214b097edd177ee617b0dcf6faf754'
-    try:
-        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getMoreEntInfo?unique=%s&token=%s' %(unique,token),headers = header,proxies=proxy,timeout=2)
-    except:
-        proxy_random = random.randint(0, proxy_len - 1)
-        proxy = {'https': proxyList[proxy_random]}
-        continue
-    print js.cookies
-    js = js.text
-    print js
-    time.sleep(2)
-    unique = '0502d4de31c712ee7c31b7d4e9d9dbc2'
-'''
+
+
+
+
+
+
+
+
+
 
 
 
