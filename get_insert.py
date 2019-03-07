@@ -502,7 +502,7 @@ def main():
             token = config.check_token()
             print "please add token"
             config.send_msg()
-            time.sleep(12)
+            time.sleep(120)
         except NameError:
             print '已经爬取200条，更换token'
             disabled_token = json.dumps(token, encoding="utf-8", ensure_ascii=False)
