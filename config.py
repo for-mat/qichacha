@@ -7,7 +7,7 @@ import json
 import time
 from dingtalkchatbot.chatbot import DingtalkChatbot
 
-db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='spider_qichacha',charset='utf8')
+db = pymysql.connect(host='192.168.1.100', port=3306, user='qcc', passwd='VhO4fNROWARt', db='spider_qichacha',charset='utf8')
 cursor = db.cursor()
 
 headers = {
