@@ -12,6 +12,7 @@ import random
 #proxy = {'https':'https://172.106.164.151:8082'}
 # 抓取免费代理
 def fetch():
+    print '正在抓取可用代理···'
     req = requests.get('https://www.proxy-list.download/api/v0/get?l=en&t=socks5')
     response = req.text
     js = json.loads(response)
@@ -28,10 +29,13 @@ def fetch():
             try:
                 requests.get('https://icanhazip.com/', proxies=proxy1, timeout=1)
                 socks.append(sock)
-                print ' 可用,已加入列表'
+                print str(sock) + ' 可用'
             except:
-                print 'no'
                 continue
+            else:
+                #抓取12个可用socks5代理
+                if len(socks)>=12:
+                    break
     return socks
 
 proxy_list = fetch()
