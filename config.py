@@ -35,6 +35,8 @@ token_num = 0
 tokens.reverse()
 def check_token():
     try:         #如果一开始就没有token，自定义一个token=123
+        tokens = get_tokens()
+        tokens.reverse()
         token = tokens.pop()
     except IndexError:
         #print 'Please provide a available token'

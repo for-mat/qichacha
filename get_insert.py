@@ -17,7 +17,7 @@ import random
 db = pymysql.connect(host='192.168.1.100', port=3306, user='root', passwd='123123', db='spider_qichacha',charset='utf8')
 cursor = db.cursor()
 
-tokens = config.tokens
+#tokens = config.tokens
 token_num = config.token_num
 token = config.token
 #proxy = proxy_pool.proxy
@@ -47,6 +47,7 @@ class insert_source_company(object):
             config.change_token()
             a = ','.join(com) #将set类型转为str
             headers = headers_pool.requests_headers()
+            proxy = proxy_pool.change_proxy()
             js = requests.get('https://xcx.qichacha.com/wxa/v1/base/advancedSearchNew?searchKey=%s&token=%s' % (a, token), headers=headers, proxies=proxy)
             js = js.text
             js = json.loads(js)
@@ -74,7 +75,7 @@ class get_all_fields(object):
         # print headers
         # 获取网页，取出json中的公司信息
         # 设置代理ip
-        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getMoreEntInfo?unique=%s&token=%s' % (unique ,token), headers = headers, proxies=proxy , timeout=2)
+        js = requests.get('https://xcx.qichacha.com/wxa/v1/base/getMoreEntInfo?unique=%s&token=%s' % (unique ,token), headers = headers,verify=False, proxies=proxy , timeout=2)
         # print js.cookies
         js = js.text
         print js
@@ -211,16 +212,18 @@ class insert_company(object):
             config.change_token()
             # 获取包含所有字段的元组
             p_num = 1
-            self.proxy = proxy_pool.proxy
+            #self.proxy = proxy_pool.proxy
             while True:
                 try:
-                    (fields, result) = get_all_fields.get_fields(unique, token, self.proxy)
-                except (
-                requests.exceptions.ProxyError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,
-                requests.exceptions.SSLError, requests.exceptions.ConnectionError):
                     self.proxy = proxy_pool.change_proxy()
-                    print 'changing proxy...%s...%s' % (p_num, self.proxy)
-                    p_num += 1
+                    proxy = self.proxy
+                    (fields, result) = get_all_fields.get_fields(unique, token, proxy)
+                except (requests.exceptions.ProxyError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,requests.exceptions.SSLError,requests.exceptions.ConnectionError):
+                    self.proxy = proxy_pool.change_proxy()
+                    global proxy
+                    proxy = self.proxy
+                    print 'changing proxy...%s...%s'%(p_num,self.proxy)
+                    p_num+=1
                     continue
                 break
             # 转为列表，并将unique,create_time,status加入列表
@@ -357,12 +360,20 @@ class insert_company_investment(object):
             config.change_token()
             # 获取包含所有字段的元组
             p_num = 1
+
+            # 判断token使用次数，使用token超过800次，就换一个token使用
+            if n == 800:
+                raise NameError
+
             while True:
                 try:
-                    self.proxy = proxy_pool.proxy
-                    (fields, result) = get_all_fields.get_fields(unique, token, self.proxy)
+                    self.proxy = proxy_pool.change_proxy()
+                    proxy = self.proxy
+                    (fields, result) = get_all_fields.get_fields(unique, token, proxy)
                 except (requests.exceptions.ProxyError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,requests.exceptions.SSLError,requests.exceptions.ConnectionError):
                     self.proxy = proxy_pool.change_proxy()
+                    global proxy
+                    proxy = self.proxy
                     print 'changing proxy...%s...%s'%(p_num,self.proxy)
                     p_num+=1
                     continue
@@ -429,18 +440,23 @@ class insert_company_branch(object):
             if unique == None:
                 continue
 
-            # 判断token使用次数，使用token超过1000次，就换一个token使用
-            config.change_token()
+            # 判断token使用次数，使用token超过800次，就换一个token使用
+            if n == 800:
+                raise NameError
 
             create_time = time.time()
             # 获取包含所有字段的元组
             p_num = 1
-            self.proxy = proxy_pool.proxy
+            #self.proxy = proxy_pool.proxy
             while True:
                 try:
-                    (fields, result) = get_all_fields.get_fields(unique, token, self.proxy)
+                    self.proxy = proxy_pool.change_proxy()
+                    proxy = self.proxy
+                    (fields, result) = get_all_fields.get_fields(unique, token, proxy)
                 except (requests.exceptions.ProxyError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,requests.exceptions.SSLError,requests.exceptions.ConnectionError):
                     self.proxy = proxy_pool.change_proxy()
+                    global proxy
+                    proxy = self.proxy
                     print 'changing proxy...%s...%s'%(p_num,self.proxy)
                     p_num+=1
                     continue
@@ -465,6 +481,10 @@ class insert_company_branch(object):
             time.sleep(2)
 
 
+
+
+
+
 def main():
     while True:
         try:
@@ -477,12 +497,21 @@ def main():
             print 'token faild or user forbidden'
             disabled_token = json.dumps(token, encoding="utf-8", ensure_ascii=False)
             cursor.execute('update token_list set token_status=0 where wx_token=%s' % disabled_token)
+            db.commit()
             global token
             token = config.check_token()
-            db.commit()
             print "please add token"
             config.send_msg()
-            time.sleep(120)
+            time.sleep(12)
+        except NameError:
+            print '已经爬取200条，更换token'
+            disabled_token = json.dumps(token, encoding="utf-8", ensure_ascii=False)
+            cursor.execute('update token_list set token_status=0 where wx_token=%s' % disabled_token)
+            db.commit()
+            global token
+            token = config.check_token()
+            continue
+
 
 
 
