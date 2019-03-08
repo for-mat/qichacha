@@ -478,7 +478,7 @@ class insert_company_branch(object):
             branch_id = cursor.fetchone()[0]
             print '第%s条插入成功,已插入%s条,剩余%s条'%(branch_id,n,len(uniques)-n)
             n+=1
-            time.sleep(2)
+            time.sleep(1.5)
 
 
 
@@ -494,17 +494,24 @@ def main():
             insert_company_investment().insert_data()
             insert_company_branch().insert_data()
         except AttributeError:
-            print 'token faild or user forbidden'
+            print 'token 失效或账号被封'
             disabled_token = json.dumps(token, encoding="utf-8", ensure_ascii=False)
             cursor.execute('update token_list set token_status=0 where wx_token=%s' % disabled_token)
             db.commit()
             global token
             token = config.check_token()
-            print "please add token"
-            config.send_msg()
+            #当所有token都不可用时,发送信息告知
+            cursor.execute('select count(id) from token_list where token_status=1')
+            remain_token = cursor.fetchone()[0]
+            print '剩余token数为：' + remain_token
+            if remain_token == 0:
+                print "无可用token,请添加···"
+                config.send_msg()
+            else:
+                continue
             time.sleep(120)
         except NameError:
-            print '已经爬取200条，更换token'
+            print '已经爬取800条，更换token'
             disabled_token = json.dumps(token, encoding="utf-8", ensure_ascii=False)
             cursor.execute('update token_list set token_status=0 where wx_token=%s' % disabled_token)
             db.commit()
