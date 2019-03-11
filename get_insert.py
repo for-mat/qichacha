@@ -503,7 +503,7 @@ def main():
             #当所有token都不可用时,发送信息告知
             cursor.execute('select count(id) from token_list where token_status=1')
             remain_token = cursor.fetchone()[0]
-            print '剩余token数为：' + remain_token
+            print '剩余token数为：' + str(remain_token)
             if remain_token == 0:
                 print "无可用token,请添加···"
                 config.send_msg()
