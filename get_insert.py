@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-获取获取(商业公司)第一级的keyno并存到数据库中,keyno就是url中的unique
+insert_source_company 获取获取(商业公司)第一级的keyno并存到数据库中,keyno就是url中的unique
+get_all_fields 获取企业信息字段
+insert_company 插入到company表
+insert_company_investment 插入到company_investment表
+insert_company_branch 插入到company_branch表
 """
 
 import proxy_pool
