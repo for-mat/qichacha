@@ -15,7 +15,6 @@ headers = {
     ,'content-type':'application/json'
     ,'charset':'utf-8'
     ,'Accept-Encoding':'gzip'
-    ,'Host':'xcx.qichacha.com'
     ,'Connection':'closed'
     ,'Server': 'Tengine'
 }
